@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/temporial-graph-rag/schemas/ontology.schema.json",
+  "title": "Temporial Graph RAG — Ontology (v1)",
+  "description": "Validates ontology JSON files consumed by load_ontology() and Ontology. See docs/ONTOLOGY.md for semantics and override merge rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ontology_id",
+    "ontology_version",
+    "canonical_events",
+    "predicate_definitions",
+    "impact_priors"
+  ],
+  "properties": {
+    "ontology_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$",
+      "description": "Stable id; file must be named {ontology_id}.json under ontologies/."
+    },
+    "ontology_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable version label (e.g. v1.0)."
+    },
+    "canonical_events": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Z][A-Z0-9_]*$",
+        "description": "canonical_event: UPPER_SNAKE_CASE"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "canonical_subevent allowed under this event"
+        }
+      }
+    },
+    "predicate_definitions": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[A-Z][A-Z0-9_]*$",
+        "description": "Predicate name (normalized to upper in code)"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Human-readable definition for LLM prompts and docs"
+      }
+    },
+    "impact_priors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default"],
+      "properties": {
+        "default": {
+          "$ref": "#/$defs/impactPriorPatch",
+          "description": "Base prior merged before event and subevent overrides."
+        },
+        "event_overrides": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "description": "Must match a key in canonical_events (validated semantically)"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/impactPriorPatch"
+          }
+        },
+        "subevent_overrides": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "description": "canonical_subevent label; merged by get_impact_prior (validated semantically)"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/impactPriorPatch"
+          }
+        }
+      }
+    },
+    "snapshot_embedding_supersession": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "publish_date_max_hours_apart": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 8760,
+              "description": "Max |publish_time| difference (hours) for embedding-driven snapshot supersession"
+            }
+          }
+        },
+        "event_overrides": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "description": "canonical_event (validated semantically)"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "publish_date_max_hours_apart": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 8760
+              }
+            }
+          }
+        }
+      }
+    },
+    "decay_retrieval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "decay_weight_threshold": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1,
+              "description": "Snapshots with computed decay_weight below this are filtered at retrieval / eligible for weekly suppression"
+            }
+          }
+        },
+        "subevent_overrides": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "description": "canonical_subevent (validated semantically)"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "decay_weight_threshold": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "impactPriorPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "type": "string",
+          "enum": ["positive", "negative", "neutral"]
+        },
+        "magnitude": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "probability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "short_term_return_bps": {
+          "type": "integer"
+        },
+        "medium_term_return_bps": {
+          "type": "integer"
+        },
+        "decay_half_life_days": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Half-life in days for retrieval decay_weight and persisted snapshot metadata"
+        }
+      },
+      "description": "Partial prior; merged default → event_overrides[canonical_event] → subevent_overrides[canonical_subevent]"
+    }
+  }
+}

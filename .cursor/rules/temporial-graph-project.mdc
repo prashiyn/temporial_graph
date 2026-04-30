@@ -1,0 +1,26 @@
+---
+description: Stack and domain defaults for the temporial graph RAG (uv, FastAPI, chunk ingestion, financial temporal graph).
+alwaysApply: true
+---
+
+# Temporial graph RAG project
+
+## Tooling
+
+- Use **uv** for this project: `uv sync`, `uv add <pkg>`, `uv run <command>`. Do not introduce pip-only or poetry-only workflows unless the user asks.
+- Prefer **FastAPI** for HTTP APIs; use Pydantic v2 models for request/response bodies.
+
+## Ingestion
+
+- Treat **posted chunks** as the main ingestion path: design endpoints and schemas for clients that send chunk payloads (text + metadata such as source, time, identifiers).
+- Keep ingestion **idempotent or traceable** where possible (ids, hashes, or append-only event log per README).
+
+## Domain (from README)
+
+- **Event-first** graph: events as first-class nodes; links to entities, impacts, causality; probabilistic attributes and time decay where modeled.
+- **Append-only** history for graph updates; do not silently overwrite temporal facts.
+- Target stack in README includes temporal graph store + GraphRAG; keep retrieval and graph writes behind clear modules as the codebase grows.
+
+## Code style
+
+- Match existing project layout and naming once present; keep changes minimal and scoped to the task.

@@ -1,0 +1,133 @@
+{
+  "ontology_id": "company_events.v1",
+  "ontology_version": "v1.0",
+  "canonical_events": {
+    "EARNINGS_FINANCIALS": ["RESULTS", "EARNINGS", "INVESTOR_MEET", "DELAY", "AUDIT"],
+    "FUND_RAISE_CAPITAL": ["ALLOTMENT", "ISSUANCE", "RIGHTS_ISSUE", "PREFERENTIAL", "QIP", "DEBENTURES", "REDEMPTION", "FUND_USE", "CREDIT_RATING", "ANNOUNCEMENT"],
+    "RESTRUCTURING": ["ACQUISITION", "MERGER", "TAKEOVER", "DEMERGER", "SALE", "BUSINESS_SALE", "DIVERSIFY", "NCLT", "EXTINCTION", "LIQUIDATION"],
+    "MANAGEMENT_CHANGE": ["APPOINTMENT", "RESIGN", "RETIRE", "HIRE", "FIRE", "DIRECTOR", "AUDITOR_RESIGN"],
+    "BOARD_MEETING": ["SHAREHOLDERS_MEETING", "COMMITTEE_MEETING", "EXTRA_ORDINARY_MEETING", "OUTCOME", "INTIMATION"],
+    "MARKET_ACTION": ["DIVIDEND", "BUYBACK", "BUYBACK_END", "SPLIT", "BONUS", "RECORD_DATE", "OPEN_OFFER", "DELISTING", "SUSPENSION", "OFS", "ANNOUNCEMENT", "VOLUME", "PRICE_MOVEMENT"],
+    "BUSINESS_UPDATE": ["CONTRACT_WIN", "CONTRACT_LOSS", "CAPACITY_ADDITION", "CAPACITY_REDUCTION", "PRODUCT_LAUNCH", "INCORPORATION", "OPERATIONS_START", "OPERATIONS_DISRUPTION", "EXPANSION", "AGREEMENT"],
+    "LEGAL_REGULATORY": ["INVESTIGATION", "ACTION_TAKEN", "COMPLIANCE", "LITIGATION", "REGULATORY_APPROVAL", "DISCLOSURE"],
+    "INSIDER_TRADING": ["TRADING_WINDOW", "DISCLOSURE", "RELATED_PARTY_TRANSACTION", "INSIDER_ACTIVITY"],
+    "CREDIT_RATING": ["RATING_UPDATE", "RATING_NEW", "RATING_REVISION"],
+    "CORPORATE_ACTION_GENERAL": ["ADDENDUM", "CORRIGENDUM", "RECORD_DATE", "GENERAL_UPDATE"],
+    "CSR_ESR": ["ESR"],
+    "OTHER": ["OTHER"]
+  },
+  "predicate_definitions": {
+    "IS_A": "Denotes class/type relation between entities or concepts.",
+    "HAS_A": "Denotes possession or composition relation.",
+    "LOCATED_IN": "Denotes geographic or organizational containment relation.",
+    "HOLDS_ROLE": "Denotes a person or entity holding a role/title.",
+    "PRODUCES": "Denotes producing/manufacturing relation.",
+    "SELLS": "Denotes selling or offering relation.",
+    "LAUNCHED": "Denotes release/launch relation.",
+    "DEVELOPED": "Denotes creation/development relation.",
+    "ADOPTED_BY": "Denotes adoption relation from product/solution to adopter.",
+    "INVESTS_IN": "Denotes investment relation.",
+    "COLLABORATES_WITH": "Denotes collaboration/partnership relation.",
+    "SUPPLIES": "Denotes supplier/vendor relation.",
+    "HAS_REVENUE": "Denotes revenue metric relation.",
+    "INCREASED": "Denotes increasing trend relation.",
+    "DECREASED": "Denotes decreasing trend relation.",
+    "RESULTED_IN": "Denotes outcome/consequence relation.",
+    "TARGETS": "Denotes target/goal relation.",
+    "PART_OF": "Denotes membership in a broader structure or process.",
+    "DISCONTINUED": "Denotes stop/end/discontinuation relation.",
+    "SECURED": "Denotes secured/obtained relation (e.g., contracts, approvals, funding).",
+    "RELATES_TO": "Generic fallback relation when no specific predicate applies."
+  },
+  "impact_priors": {
+    "default": {
+      "direction": "neutral",
+      "magnitude": "low",
+      "probability": 0.55,
+      "short_term_return_bps": 0,
+      "medium_term_return_bps": 0,
+      "decay_half_life_days": 14
+    },
+    "event_overrides": {
+      "EARNINGS_FINANCIALS": {
+        "decay_half_life_days": 45,
+        "probability": 0.62
+      },
+      "LEGAL_REGULATORY": {
+        "direction": "negative",
+        "magnitude": "medium",
+        "probability": 0.62,
+        "short_term_return_bps": -40,
+        "medium_term_return_bps": -30,
+        "decay_half_life_days": 25
+      },
+      "MARKET_ACTION": {
+        "magnitude": "medium",
+        "probability": 0.6,
+        "decay_half_life_days": 21
+      }
+    },
+    "subevent_overrides": {
+      "RESULTS": {
+        "direction": "positive",
+        "magnitude": "medium",
+        "probability": 0.74,
+        "short_term_return_bps": 110,
+        "medium_term_return_bps": 70,
+        "decay_half_life_days": 30
+      },
+      "CONTRACT_WIN": {
+        "direction": "positive",
+        "magnitude": "medium",
+        "probability": 0.72,
+        "short_term_return_bps": 90,
+        "medium_term_return_bps": 60,
+        "decay_half_life_days": 28
+      },
+      "DIVIDEND": {
+        "direction": "positive",
+        "magnitude": "low",
+        "probability": 0.68,
+        "short_term_return_bps": 45,
+        "medium_term_return_bps": 20,
+        "decay_half_life_days": 20
+      },
+      "RESIGN": {
+        "direction": "negative",
+        "magnitude": "medium",
+        "probability": 0.72,
+        "short_term_return_bps": -120,
+        "medium_term_return_bps": -80,
+        "decay_half_life_days": 30
+      },
+      "OPERATIONS_DISRUPTION": {
+        "direction": "negative",
+        "magnitude": "high",
+        "probability": 0.77,
+        "short_term_return_bps": -180,
+        "medium_term_return_bps": -120,
+        "decay_half_life_days": 40
+      },
+      "LITIGATION": {
+        "direction": "negative",
+        "magnitude": "medium",
+        "probability": 0.7,
+        "short_term_return_bps": -95,
+        "medium_term_return_bps": -70,
+        "decay_half_life_days": 35
+      }
+    }
+  },
+  "snapshot_embedding_supersession": {
+    "default": {
+      "publish_date_max_hours_apart": 12
+    },
+    "event_overrides": {}
+  },
+  "decay_retrieval": {
+    "default": {
+      "decay_weight_threshold": 0.1
+    },
+    "subevent_overrides": {}
+  }
+}

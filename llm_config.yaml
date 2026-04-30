@@ -1,0 +1,51 @@
+# Per-task LLM routing (provider + optional model, reasoning_effort, response_format).
+# Merge order for each task: built-in default → this file → LLM_TASK_<TASKNAME>_* env vars.
+# Provider/model strings are passed through to your document-processing LLM service (openai, groq, …).
+# The `description` field is documentation only; it is not read by the app.
+
+# Optional service overrides (any omitted key falls back to LLM_SERVICE_* / defaults):
+# llm_service:
+#   base_url: http://localhost:8000
+#   auth_mode: none
+#   timeout_seconds: 120
+
+tasks:
+  statement_extraction:
+    description: >-
+      Ingestion: pull discrete factual statements from raw text chunks before temporal
+      and event structuring.
+  temporal_range_extraction:
+    description: >-
+      Ingestion: infer publication-relevant time windows (ranges, anchors) tied to statements.
+  event_or_triplet_extraction:
+    description: >-
+      Ingestion: map text to ontology-backed events or subject–predicate–object triplets
+      for the temporal graph (also used via alias task name triplet_or_event_extraction).
+  entity_resolution_assist:
+    description: >-
+      Ingestion: suggest or disambiguate entity labels and links against the ontology
+      and canonical identifiers.
+  retrieval_planner:
+    description: >-
+      RAG: plan multi-step retrieval—sub-queries, tools, and ordering—for a user question.
+  retrieval_step:
+    description: >-
+      RAG: run one planned retrieval step (reasoning over intermediate context and tool results).
+  retrieval_trend_synthesis:
+    description: >-
+      RAG: compress time-bounded or trend-heavy retrieval hits into a concise narrative for downstream use.
+  answer_synthesis:
+    description: >-
+      RAG: produce the final natural-language answer from gathered evidence and instructions.
+  embeddings:
+    description: >-
+      Shared: embedding vectors for chunks, retrieval, and similarity (often a different/smaller model than chat tasks).
+
+  # Override examples (uncomment and edit):
+  # statement_extraction:
+  #   description: "..."  # optional; can repeat key with provider/model
+  #   provider: groq
+  #   model: llama-3.3-70b-versatile
+  # embeddings:
+  #   provider: openai
+  #   model: text-embedding-3-small

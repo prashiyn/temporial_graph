@@ -1,0 +1,2151 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Temporial Graph RAG API",
+    "version": "0.1.0",
+    "description": "Financial temporal-graph RAG service. Chunk ingestion with LLM extraction, Neo4j graph persistence, decay-aware retrieval, single-shot and multi-step RAG.\n\nCompanion docs: docs/DESIGN.md, docs/DEVELOPER_ENHANCEMENTS.md, docs/MULTI_PROJECT_OPERATING_SPEC.md, docs/ONTOLOGY.md."
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health/llm": {
+      "get": {
+        "summary": "Llm Health",
+        "description": "Diagnostic: reachability of document-processing ``GET /llm/models`` (plan \u00a78.2).",
+        "operationId": "llm_health_v1_health_llm_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Llm Health V1 Health Llm Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health/neo4j": {
+      "get": {
+        "summary": "Neo4J Health",
+        "operationId": "neo4j_health_v1_health_neo4j_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Neo4J Health V1 Health Neo4J Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections": {
+      "get": {
+        "summary": "List Collections",
+        "operationId": "list_collections_v1_collections_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CollectionResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Collections V1 Collections Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Collection",
+        "operationId": "create_collection_v1_collections_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}": {
+      "get": {
+        "summary": "Get Collection",
+        "operationId": "get_collection_v1_collections__collection_name__get",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}/impact-prior": {
+      "get": {
+        "summary": "Impact Prior Preview",
+        "operationId": "impact_prior_preview_v1_collections__collection_name__impact_prior_get",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          },
+          {
+            "name": "canonical_event",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Canonical Event"
+            }
+          },
+          {
+            "name": "canonical_subevent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Canonical Subevent"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactPriorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}/snapshots/search": {
+      "get": {
+        "summary": "Search Snapshots",
+        "operationId": "search_snapshots_v1_collections__collection_name__snapshots_search_get",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "canonical_event",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Canonical Event"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "lexical",
+                "vector"
+              ],
+              "type": "string",
+              "default": "lexical",
+              "title": "Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}/chunks/{chunk_id}/timeline": {
+      "get": {
+        "summary": "Chunk Timeline",
+        "operationId": "chunk_timeline_v1_collections__collection_name__chunks__chunk_id__timeline_get",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          },
+          {
+            "name": "chunk_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Chunk Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChunkTimelineResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/network/entities/{entity_name}/collections": {
+      "get": {
+        "summary": "Entity Collections Network",
+        "operationId": "entity_collections_network_v1_network_entities__entity_name__collections_get",
+        "parameters": [
+          {
+            "name": "entity_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Name"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityCollectionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}/events/search": {
+      "get": {
+        "summary": "Search Events",
+        "operationId": "search_events_v1_collections__collection_name__events_search_get",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "canonical_event",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Canonical Event"
+            }
+          },
+          {
+            "name": "canonical_subevent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Canonical Subevent"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Time"
+            }
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Time"
+            }
+          },
+          {
+            "name": "include_superseded",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Superseded"
+            }
+          },
+          {
+            "name": "exclude_decay_suppressed_snapshots",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Exclude Decay Suppressed Snapshots"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventSearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}/events/supersession": {
+      "post": {
+        "summary": "Create Event Supersession",
+        "operationId": "create_event_supersession_v1_collections__collection_name__events_supersession_post",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEventSupersessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventSupersessionCreatedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}/events/{event_id}/supersession": {
+      "get": {
+        "summary": "Get Event Supersession",
+        "operationId": "get_event_supersession_v1_collections__collection_name__events__event_id__supersession_get",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          },
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventSupersessionDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}/rag/answer": {
+      "post": {
+        "summary": "Rag Answer",
+        "operationId": "rag_answer_v1_collections__collection_name__rag_answer_post",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RagAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RagAnswerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/{collection_name}/rag/multi_step": {
+      "post": {
+        "summary": "Rag Multi Step",
+        "operationId": "rag_multi_step_v1_collections__collection_name__rag_multi_step_post",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Collection Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MultiStepRagRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiStepRagResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/collections/get-or-create": {
+      "post": {
+        "summary": "Get Or Create Collection",
+        "operationId": "get_or_create_collection_v1_collections_get_or_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionGetOrCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/chunks": {
+      "post": {
+        "summary": "Ingest Chunks",
+        "operationId": "ingest_chunks_v1_ingest_chunks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestBatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/ingest/chunks/process": {
+      "post": {
+        "summary": "Ingest And Process Chunks",
+        "operationId": "ingest_and_process_chunks_v1_ingest_chunks_process_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestProcessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChunkTimelineItem": {
+        "properties": {
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "chunk_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Id"
+          },
+          "canonical_event": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Event"
+          },
+          "canonical_subevent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Subevent"
+          },
+          "ingested_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingested At"
+          },
+          "supersedes_snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersedes Snapshot Id"
+          }
+        },
+        "type": "object",
+        "title": "ChunkTimelineItem"
+      },
+      "ChunkTimelineResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "chunk_id": {
+            "type": "string",
+            "title": "Chunk Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChunkTimelineItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "chunk_id",
+          "items"
+        ],
+        "title": "ChunkTimelineResponse"
+      },
+      "ChunkType": {
+        "type": "string",
+        "enum": [
+          "text",
+          "table",
+          "image"
+        ],
+        "title": "ChunkType"
+      },
+      "CollectionDetailResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "ontology_id": {
+            "type": "string",
+            "title": "Ontology Id"
+          },
+          "ontology_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ontology Version"
+          },
+          "registry_backend": {
+            "type": "string",
+            "title": "Registry Backend"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "ontology_id",
+          "registry_backend"
+        ],
+        "title": "CollectionDetailResponse"
+      },
+      "CollectionGetOrCreateResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "ontology_id": {
+            "type": "string",
+            "title": "Ontology Id"
+          },
+          "ontology_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ontology Version"
+          },
+          "registry_backend": {
+            "type": "string",
+            "title": "Registry Backend"
+          },
+          "created": {
+            "type": "boolean",
+            "title": "Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "ontology_id",
+          "registry_backend",
+          "created"
+        ],
+        "title": "CollectionGetOrCreateResponse"
+      },
+      "CollectionResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "ontology_id": {
+            "type": "string",
+            "title": "Ontology Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "ontology_id"
+        ],
+        "title": "CollectionResponse"
+      },
+      "CreateCollectionRequest": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Collection Name"
+          },
+          "ontology_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Ontology Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "ontology_id"
+        ],
+        "title": "CreateCollectionRequest"
+      },
+      "CreateEventSupersessionRequest": {
+        "properties": {
+          "newer_event_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Newer Event Id"
+          },
+          "older_event_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Older Event Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "newer_event_id",
+          "older_event_id"
+        ],
+        "title": "CreateEventSupersessionRequest"
+      },
+      "EntityCollectionConnection": {
+        "properties": {
+          "collection_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collection Name"
+          },
+          "entity_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Name"
+          },
+          "entity_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Type"
+          },
+          "observed_roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Observed Roles",
+            "default": []
+          },
+          "mention_count": {
+            "type": "integer",
+            "title": "Mention Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "EntityCollectionConnection"
+      },
+      "EntityCollectionsResponse": {
+        "properties": {
+          "entity_name": {
+            "type": "string",
+            "title": "Entity Name"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/EntityCollectionConnection"
+            },
+            "type": "array",
+            "title": "Connections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entity_name",
+          "connections"
+        ],
+        "title": "EntityCollectionsResponse"
+      },
+      "EventSearchHit": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "canonical_event": {
+            "type": "string",
+            "title": "Canonical Event"
+          },
+          "canonical_subevent": {
+            "type": "string",
+            "title": "Canonical Subevent"
+          },
+          "normalized_subtype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normalized Subtype"
+          },
+          "event_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Time"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "magnitude": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Magnitude"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "source_snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Snapshot Id"
+          },
+          "superseded_by_event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded By Event Id"
+          },
+          "supersession_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supersession Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_id",
+          "collection_name",
+          "canonical_event",
+          "canonical_subevent"
+        ],
+        "title": "EventSearchHit"
+      },
+      "EventSearchResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/EventSearchHit"
+            },
+            "type": "array",
+            "title": "Hits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "hits"
+        ],
+        "title": "EventSearchResponse"
+      },
+      "EventSupersessionCreatedResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "newer_event_id": {
+            "type": "string",
+            "title": "Newer Event Id"
+          },
+          "older_event_id": {
+            "type": "string",
+            "title": "Older Event Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "newer_event_id",
+          "older_event_id"
+        ],
+        "title": "EventSupersessionCreatedResponse"
+      },
+      "EventSupersessionDetailResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "superseded_by_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Superseded By Event Ids",
+            "default": []
+          },
+          "supersedes_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supersedes Event Ids",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "event_id"
+        ],
+        "title": "EventSupersessionDetailResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ImpactPriorResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "ontology_id": {
+            "type": "string",
+            "title": "Ontology Id"
+          },
+          "ontology_version": {
+            "type": "string",
+            "title": "Ontology Version"
+          },
+          "canonical_event": {
+            "type": "string",
+            "title": "Canonical Event"
+          },
+          "canonical_subevent": {
+            "type": "string",
+            "title": "Canonical Subevent"
+          },
+          "prior": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Prior"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "ontology_id",
+          "ontology_version",
+          "canonical_event",
+          "canonical_subevent",
+          "prior"
+        ],
+        "title": "ImpactPriorResponse"
+      },
+      "IngestBatchRequest": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Collection Name"
+          },
+          "ontology_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Ontology Id"
+          },
+          "chunks": {
+            "items": {
+              "$ref": "#/components/schemas/IngestChunk"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Chunks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "ontology_id",
+          "chunks"
+        ],
+        "title": "IngestBatchRequest"
+      },
+      "IngestBatchResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "ontology_id": {
+            "type": "string",
+            "title": "Ontology Id"
+          },
+          "accepted_chunks": {
+            "type": "integer",
+            "title": "Accepted Chunks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "ontology_id",
+          "accepted_chunks"
+        ],
+        "title": "IngestBatchResponse"
+      },
+      "IngestChunk": {
+        "properties": {
+          "chunk_id": {
+            "type": "string",
+            "title": "Chunk Id",
+            "description": "Stable chunk identifier"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "Chunk text, table, or image description"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ChunkType",
+            "description": "One of text, table, image"
+          },
+          "doc_id": {
+            "type": "string",
+            "title": "Doc Id",
+            "description": "Document id"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page",
+            "description": "Source page when available"
+          },
+          "bundle_id": {
+            "type": "string",
+            "title": "Bundle Id",
+            "description": "Semantic bundle id"
+          },
+          "section_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section Title",
+            "description": "Nearest section heading"
+          },
+          "title_summary": {
+            "type": "string",
+            "title": "Title Summary",
+            "description": "LLM section summary",
+            "default": ""
+          },
+          "publish_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publish Date",
+            "description": "Document publish date if provided"
+          },
+          "prev_chunk": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Chunk",
+            "description": "Previous chunk id"
+          },
+          "next_chunk": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Chunk",
+            "description": "Next chunk id"
+          },
+          "canonical_event": {
+            "type": "string",
+            "title": "Canonical Event",
+            "description": "Top-level ontology event type"
+          },
+          "canonical_subevent": {
+            "type": "string",
+            "title": "Canonical Subevent",
+            "description": "Ontology subevent type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chunk_id",
+          "content",
+          "type",
+          "doc_id",
+          "bundle_id",
+          "canonical_event",
+          "canonical_subevent"
+        ],
+        "title": "IngestChunk"
+      },
+      "IngestProcessResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "ontology_id": {
+            "type": "string",
+            "title": "Ontology Id"
+          },
+          "accepted_chunks": {
+            "type": "integer",
+            "title": "Accepted Chunks"
+          },
+          "processed": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessedChunkSummary"
+            },
+            "type": "array",
+            "title": "Processed"
+          },
+          "persisted_snapshots": {
+            "type": "integer",
+            "title": "Persisted Snapshots",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "ontology_id",
+          "accepted_chunks",
+          "processed"
+        ],
+        "title": "IngestProcessResponse"
+      },
+      "MultiStepRagRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Question"
+          },
+          "max_steps": {
+            "type": "integer",
+            "maximum": 25.0,
+            "minimum": 1.0,
+            "title": "Max Steps",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "MultiStepRagRequest"
+      },
+      "MultiStepRagResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "initial_plan": {
+            "type": "string",
+            "title": "Initial Plan"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "steps": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Steps",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "question",
+          "initial_plan",
+          "answer"
+        ],
+        "title": "MultiStepRagResponse"
+      },
+      "ProcessedChunkSummary": {
+        "properties": {
+          "chunk_id": {
+            "type": "string",
+            "title": "Chunk Id"
+          },
+          "canonical_event": {
+            "type": "string",
+            "title": "Canonical Event"
+          },
+          "canonical_subevent": {
+            "type": "string",
+            "title": "Canonical Subevent"
+          },
+          "extraction_text": {
+            "type": "string",
+            "title": "Extraction Text"
+          },
+          "embedding_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Model"
+          },
+          "embedding_vector_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Vector Size"
+          },
+          "impact_direction": {
+            "type": "string",
+            "title": "Impact Direction"
+          },
+          "impact_magnitude": {
+            "type": "string",
+            "title": "Impact Magnitude"
+          },
+          "impact_probability": {
+            "type": "number",
+            "title": "Impact Probability"
+          },
+          "short_term_return_bps": {
+            "type": "integer",
+            "title": "Short Term Return Bps"
+          },
+          "medium_term_return_bps": {
+            "type": "integer",
+            "title": "Medium Term Return Bps"
+          },
+          "decay_half_life_days": {
+            "type": "integer",
+            "title": "Decay Half Life Days"
+          },
+          "causality_target": {
+            "type": "string",
+            "title": "Causality Target"
+          },
+          "causality_reason": {
+            "type": "string",
+            "title": "Causality Reason"
+          },
+          "entities": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Entities",
+            "default": []
+          },
+          "extracted_events": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Extracted Events",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "chunk_id",
+          "canonical_event",
+          "canonical_subevent",
+          "extraction_text",
+          "impact_direction",
+          "impact_magnitude",
+          "impact_probability",
+          "short_term_return_bps",
+          "medium_term_return_bps",
+          "decay_half_life_days",
+          "causality_target",
+          "causality_reason"
+        ],
+        "title": "ProcessedChunkSummary"
+      },
+      "RagAnswerRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Question"
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "default": 5
+          },
+          "retrieval_mode": {
+            "type": "string",
+            "enum": [
+              "lexical",
+              "vector"
+            ],
+            "title": "Retrieval Mode",
+            "default": "lexical"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "RagAnswerRequest"
+      },
+      "RagAnswerResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/RagSourceRef"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "question",
+          "answer",
+          "sources"
+        ],
+        "title": "RagAnswerResponse"
+      },
+      "RagSourceRef": {
+        "properties": {
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "chunk_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Id"
+          },
+          "doc_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doc Id"
+          }
+        },
+        "type": "object",
+        "title": "RagSourceRef"
+      },
+      "SnapshotSearchHit": {
+        "properties": {
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "chunk_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Id"
+          },
+          "doc_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doc Id"
+          },
+          "bundle_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bundle Id"
+          },
+          "canonical_event": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Event"
+          },
+          "canonical_subevent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Subevent"
+          },
+          "ingested_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingested At"
+          },
+          "extraction_text": {
+            "type": "string",
+            "title": "Extraction Text",
+            "default": ""
+          },
+          "similarity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Similarity"
+          }
+        },
+        "type": "object",
+        "title": "SnapshotSearchHit"
+      },
+      "SnapshotSearchResponse": {
+        "properties": {
+          "collection_name": {
+            "type": "string",
+            "title": "Collection Name"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "lexical",
+              "vector"
+            ],
+            "title": "Mode",
+            "default": "lexical"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotSearchHit"
+            },
+            "type": "array",
+            "title": "Hits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "collection_name",
+          "query",
+          "hits"
+        ],
+        "title": "SnapshotSearchResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8000",
+      "description": "Local uvicorn (default)"
+    },
+    {
+      "url": "/",
+      "description": "Relative (same host as UI serving this spec)"
+    }
+  ]
+}
