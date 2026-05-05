@@ -13,6 +13,7 @@ import uuid
 
 import pytest
 
+from temporial_graph_rag.collection_naming import to_internal_collection_name
 from temporial_graph_rag.graph import Neo4jGraphStore, Neo4jSettings
 from temporial_graph_rag.models.chunk import ChunkType, IngestChunk
 from temporial_graph_rag.pipeline.processor import ProcessedChunk
@@ -50,12 +51,13 @@ def neo4j_integration_store():
 
 
 def _wipe_collection(store: Neo4jGraphStore, name: str) -> None:
+    n = to_internal_collection_name(name)
     db = store._settings.database
     with store._driver.session(database=db) as session:
-        session.run("MATCH (c:RagCollection {name: $n}) DETACH DELETE c", n=name).consume()
+        session.run("MATCH (c:RagCollection {name: $n}) DETACH DELETE c", n=n).consume()
         session.run(
             "MATCH (x) WHERE x.collection_name = $n DETACH DELETE x",
-            n=name,
+            n=n,
         ).consume()
 
 
@@ -141,14 +143,16 @@ def test_collection_isolation_snapshots(neo4j_integration_store: Neo4jGraphStore
         )
 
         db = store._settings.database
+        ica = to_internal_collection_name(col_a)
+        icb = to_internal_collection_name(col_b)
         with store._driver.session(database=db) as session:
             ca = session.run(
                 "MATCH (s:ChunkIngestSnapshot {collection_name: $c}) RETURN count(s) AS n",
-                c=col_a,
+                c=ica,
             ).single()
             cb = session.run(
                 "MATCH (s:ChunkIngestSnapshot {collection_name: $c}) RETURN count(s) AS n",
-                c=col_b,
+                c=icb,
             ).single()
             assert int(ca["n"]) >= 1
             assert int(cb["n"]) >= 1
@@ -159,8 +163,8 @@ def test_collection_isolation_snapshots(neo4j_integration_store: Neo4jGraphStore
                 WHERE a.chunk_id = b.chunk_id
                 RETURN count(*) AS n
                 """,
-                ca=col_a,
-                cb=col_b,
+                ca=ica,
+                cb=icb,
             ).single()
             assert int(cross["n"]) == 0
     finally:
@@ -227,7 +231,7 @@ def test_event_causes_edge_between_events(neo4j_integration_store: Neo4jGraphSto
                 """,
                 src=src_stable,
                 tgt=tgt_stable,
-                c=col,
+                c=to_internal_collection_name(col),
             ).single()
             assert row is not None
             assert float(row["p"]) > 0
@@ -343,7 +347,7 @@ def test_causes_rich_list_with_probability(neo4j_integration_store: Neo4jGraphSt
                 """,
                 src=src_stable,
                 tgt=tgt_stable,
-                c=col,
+                c=to_internal_collection_name(col),
             ).single()
             assert row is not None
             assert abs(float(row["p"]) - 0.82) < 1e-6

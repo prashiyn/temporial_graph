@@ -11,6 +11,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from neo4j.exceptions import Neo4jError
 from pydantic import BaseModel, Field
 
+from temporial_graph_rag.api.collection_name_middleware import CollectionNameExposeMiddleware
 from temporial_graph_rag.collections.registry import (
     CollectionRegistry,
     MutableCollectionRegistry,
@@ -105,6 +106,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="temporial-graph-rag", lifespan=lifespan)
+app.add_middleware(CollectionNameExposeMiddleware)
 registry = MutableCollectionRegistry(CollectionRegistry())
 
 

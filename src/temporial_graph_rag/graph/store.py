@@ -9,6 +9,7 @@ from typing import Any
 from neo4j import GraphDatabase
 from neo4j.exceptions import Neo4jError
 
+from temporial_graph_rag.collection_naming import to_external_collection_name, to_internal_collection_name
 from temporial_graph_rag.graph.config import Neo4jSettings
 from temporial_graph_rag.graph.publish_time import hours_apart_utc, parse_publish_instant
 from temporial_graph_rag.graph.vector_similarity import cosine_similarity, to_float_list
@@ -37,8 +38,9 @@ class Neo4jGraphStore:
 
     @staticmethod
     def _collection_company_name(collection_name: str) -> str:
-        # Lightweight canonicalization for collection-root company node.
-        return " ".join(p.capitalize() for p in collection_name.replace("-", "_").split("_") if p)
+        # Derive display tokens from logical name (strip storage prefix first).
+        logical = to_external_collection_name(collection_name)
+        return " ".join(p.capitalize() for p in logical.replace("-", "_").split("_") if p)
 
     @staticmethod
     def _norm(value: str) -> str:
@@ -91,6 +93,7 @@ class Neo4jGraphStore:
         result: ProcessedChunk,
         snapshot_embed_publish_window_hours: float | None = None,
     ) -> str:
+        collection_name = to_internal_collection_name(collection_name)
         snapshot_id = str(uuid.uuid4())
         ingested_at = datetime.now(timezone.utc).isoformat()
 
@@ -741,6 +744,7 @@ class Neo4jGraphStore:
         older_event_id: str,
         reason: str | None,
     ) -> dict[str, Any] | None:
+        collection_name = to_internal_collection_name(collection_name)
         edge_at = datetime.now(timezone.utc).isoformat()
         rsn = (reason or "").strip() or "manual_api"
         with self._driver.session(database=self._settings.database) as session:
@@ -776,6 +780,7 @@ class Neo4jGraphStore:
         collection_name: str,
         event_id: str,
     ) -> dict[str, Any] | None:
+        collection_name = to_internal_collection_name(collection_name)
         with self._driver.session(database=self._settings.database) as session:
             row = session.run(
                 """
@@ -834,6 +839,7 @@ class Neo4jGraphStore:
         publish_date_max: str | None = None,
         exclude_decay_suppressed: bool = True,
     ) -> list[dict[str, Any]]:
+        collection_name = to_internal_collection_name(collection_name)
         if query_embedding is not None:
             return self._search_snapshots_vector(
                 collection_name=collection_name,
@@ -1044,6 +1050,7 @@ class Neo4jGraphStore:
         include_superseded: bool = False,
         exclude_decay_suppressed_snapshots: bool = True,
     ) -> list[dict[str, Any]]:
+        collection_name = to_internal_collection_name(collection_name)
         cypher = """
         MATCH (ev:Event {collection_name: $collection_name})-[:DERIVED_FROM]->(snap:ChunkIngestSnapshot {collection_name: $collection_name})
         WHERE 1=1
@@ -1123,6 +1130,7 @@ class Neo4jGraphStore:
             return [dict(r) for r in result]
 
     def upsert_rag_collection(self, *, collection_name: str, ontology_id: str) -> dict[str, Any]:
+        collection_name = to_internal_collection_name(collection_name)
         with self._driver.session(database=self._settings.database) as session:
             row = session.run(
                 """
@@ -1138,6 +1146,7 @@ class Neo4jGraphStore:
             return dict(row)
 
     def get_rag_collection(self, *, collection_name: str) -> dict[str, Any] | None:
+        collection_name = to_internal_collection_name(collection_name)
         with self._driver.session(database=self._settings.database) as session:
             row = session.run(
                 """
@@ -1160,6 +1169,7 @@ class Neo4jGraphStore:
         skip: int,
         limit: int,
     ) -> list[dict[str, Any]]:
+        collection_name = to_internal_collection_name(collection_name)
         with self._driver.session(database=self._settings.database) as session:
             result = session.run(
                 """
@@ -1187,6 +1197,7 @@ class Neo4jGraphStore:
         snapshot_id: str,
         suppressed_at_iso: str,
     ) -> None:
+        collection_name = to_internal_collection_name(collection_name)
         with self._driver.session(database=self._settings.database) as session:
             session.run(
                 """
@@ -1239,6 +1250,7 @@ class Neo4jGraphStore:
         chunk_id: str,
         limit: int = 50,
     ) -> list[dict[str, Any]]:
+        collection_name = to_internal_collection_name(collection_name)
         cypher = """
         MATCH (ref:ChunkRef {chunk_id: $chunk_id, collection_name: $collection_name})
         MATCH (snap:ChunkIngestSnapshot)-[:OF_CHUNK]->(ref)

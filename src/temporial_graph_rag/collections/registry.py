@@ -3,6 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from temporial_graph_rag.collection_naming import (
+    to_external_collection_name,
+    to_internal_collection_name,
+)
+
 
 @dataclass(frozen=True)
 class CollectionBinding:
@@ -15,20 +20,22 @@ class CollectionRegistry:
         self._bindings: dict[str, CollectionBinding] = {}
 
     def create(self, collection_name: str, ontology_id: str) -> CollectionBinding:
-        existing = self._bindings.get(collection_name)
+        internal = to_internal_collection_name(collection_name)
+        existing = self._bindings.get(internal)
         if existing and existing.ontology_id != ontology_id:
             raise ValueError(
-                f"Collection '{collection_name}' already exists with ontology '{existing.ontology_id}'"
+                f"Collection '{to_external_collection_name(internal)}' already exists with ontology '{existing.ontology_id}'"
             )
-        binding = CollectionBinding(collection_name=collection_name, ontology_id=ontology_id)
-        self._bindings[collection_name] = binding
+        binding = CollectionBinding(collection_name=internal, ontology_id=ontology_id)
+        self._bindings[internal] = binding
         return binding
 
     def get(self, collection_name: str) -> CollectionBinding | None:
-        return self._bindings.get(collection_name)
+        return self._bindings.get(to_internal_collection_name(collection_name))
 
     def ensure_binding(self, collection_name: str, ontology_id: str) -> None:
-        existing = self._bindings.get(collection_name)
+        internal = to_internal_collection_name(collection_name)
+        existing = self._bindings.get(internal)
         if not existing:
             raise KeyError(f"Collection '{collection_name}' does not exist")
         if existing.ontology_id != ontology_id:
@@ -63,7 +70,7 @@ class Neo4jCollectionRegistry:
         existing = self.get(collection_name)
         if existing and existing.ontology_id != ontology_id:
             raise ValueError(
-                f"Collection '{collection_name}' already exists with ontology '{existing.ontology_id}'"
+                f"Collection '{to_external_collection_name(existing.collection_name)}' already exists with ontology '{existing.ontology_id}'"
             )
         row = self._store.upsert_rag_collection(collection_name=collection_name, ontology_id=ontology_id)
         return CollectionBinding(
