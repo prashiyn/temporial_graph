@@ -141,7 +141,7 @@ async def health() -> dict[str, str]:
 
 @app.get("/v1/health/llm")
 async def llm_health(llm: LLMClient = Depends(get_llm_client)) -> dict[str, object]:
-    """Diagnostic: reachability of document-processing ``GET /llm/models`` (plan §8.2)."""
+    """Diagnostic: reachability of llm-service ``GET /llm/models`` (plan §8.2)."""
     try:
         payload = llm.models()
     except Exception as exc:  # noqa: BLE001

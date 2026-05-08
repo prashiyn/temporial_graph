@@ -1,11 +1,11 @@
 # Per-task LLM routing (provider + optional model, reasoning_effort, response_format).
 # Merge order for each task: built-in default → this file → LLM_TASK_<TASKNAME>_* env vars.
-# Provider/model strings are passed through to your document-processing LLM service (openai, groq, …).
+# Provider/model strings are passed through to **llm-service** (openai, groq, …).
 # The `description` field is documentation only; it is not read by the app.
 
 # Optional service overrides (any omitted key falls back to LLM_SERVICE_* / defaults):
 # llm_service:
-#   base_url: http://localhost:8000
+#   base_url: http://llm-service:8001
 #   auth_mode: none
 #   timeout_seconds: 120
 

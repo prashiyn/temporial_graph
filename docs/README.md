@@ -11,5 +11,6 @@
 
 External references used throughout:
 
+- **HTTP LLM contract** (upstream service this app calls): repository root [`llm_service_openapi.json`](../llm_service_openapi.json) (OpenAPI 3.1 for `/llm/*`).
 - **Frozen reference** (do not rewrite for product): [`input_docs/temporal_agents.ipynb`](./input_docs/temporal_agents.ipynb) (OpenAI Temporal Agents tutorial).
 - Product mapping: [`input_docs/PRODUCT_ENHANCEMENT.md`](./input_docs/PRODUCT_ENHANCEMENT.md).

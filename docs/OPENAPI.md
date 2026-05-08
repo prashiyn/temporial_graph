@@ -64,7 +64,7 @@ Below, **Neo4j required** means `NEO4J_ENABLED=true` and a reachable database; o
 | Method | Path | Neo4j | Description |
 | ------ | ---- | ----- | ----------- |
 | GET | `/health` | No | Liveness: `{"status":"ok"}`. |
-| GET | `/v1/health/llm` | No | Calls LLM service `GET /llm/models` (or equivalent client method). **503** if unreachable. |
+| GET | `/v1/health/llm` | No | Probes **llm-service** via `GET /llm/models` through `LLMClient`. **503** if unreachable. |
 | GET | `/v1/health/neo4j` | Optional | Returns `{"neo4j":"disabled"}` when off; when enabled, **ping** and return `{"neo4j":"ok"}` or **503**. |
 
 ### 4.2 Collections (registry)

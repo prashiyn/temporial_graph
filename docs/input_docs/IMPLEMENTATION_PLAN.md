@@ -1,6 +1,6 @@
 # Implementation Plan: Temporial Graph RAG (Approved decisions integrated)
 
-This document translates requirements into a sequenced build plan. Baseline: **OpenAI Temporal Agents cookbook** (`temporal_agents.ipynb`). Delta: **PRODUCT_ENHANCEMENT.md**. First ontology: **CANONOCAL_EVENTS.md** → **`ontologies/company_events.v1.json`**. Ingestion: your **chunk JSON** + **per-chunk** `canonical_event` / `canonical_subevent`. Runtime: **uv**, **FastAPI**, **Neo4j**. LLM calls use your external service from `doc_processing_openapi.json` (`/llm/*` APIs), not OpenAI direct in app code.
+This document translates requirements into a sequenced build plan. Baseline: **OpenAI Temporal Agents cookbook** (`temporal_agents.ipynb`). Delta: **PRODUCT_ENHANCEMENT.md**. First ontology: **CANONOCAL_EVENTS.md** → **`ontologies/company_events.v1.json`**. Ingestion: your **chunk JSON** + **per-chunk** `canonical_event` / `canonical_subevent`. Runtime: **uv**, **FastAPI**, **Neo4j**. LLM calls use your external **llm-service** (`llm_service_openapi.json` describes `/llm/*`), not OpenAI direct in app code.
 
 ---
 
@@ -77,9 +77,9 @@ Narrative + code across **238 cells** (§11). In short:
 
 Align with `CANONOCAL_EVENTS.md` §6 where applicable (`event_id`, `normalized_subtype`, `timestamp`, `confidence`, `direction`, `magnitude`, `entities`, `source`, `ontology_version`). **`canonical_event` / `canonical_subevent`** come per chunk from ingest; LLM may still propose **`normalized_subtype`** within allowed set.
 
-### 3.5 LLM integration contract (`doc_processing_openapi.json`)
+### 3.5 LLM integration contract (`llm_service_openapi.json`)
 
-Use the external document-processing LLM service for all generation/embedding calls.
+Use the external **llm-service** for all generation/embedding calls.
 
 - **Completions endpoint:** `POST /llm/complete`
   - Request schema: `CompletionRequest` (`provider`, `messages`, optional `model`, `reasoning_effort`, `response_format`).
@@ -187,7 +187,7 @@ Define a central config module/file that maps each pipeline task to model/provid
 
 ```yaml
 llm:
-  base_url: "http://doc-processing-service"
+  base_url: "http://llm-service:8001"
   timeout_seconds: 60
   tasks:
     statement_extraction:

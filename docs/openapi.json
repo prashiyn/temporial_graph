@@ -1,9 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Temporial Graph RAG API",
-    "version": "0.1.0",
-    "description": "Financial temporal-graph RAG service. Chunk ingestion with LLM extraction, Neo4j graph persistence, decay-aware retrieval, single-shot and multi-step RAG.\n\nCompanion docs: docs/DESIGN.md, docs/DEVELOPER_ENHANCEMENTS.md, docs/MULTI_PROJECT_OPERATING_SPEC.md, docs/ONTOLOGY.md."
+    "title": "temporial-graph-rag",
+    "version": "0.1.0"
   },
   "paths": {
     "/health": {
@@ -31,7 +30,7 @@
     "/v1/health/llm": {
       "get": {
         "summary": "Llm Health",
-        "description": "Diagnostic: reachability of document-processing ``GET /llm/models`` (plan \u00a78.2).",
+        "description": "Diagnostic: reachability of llm-service ``GET /llm/models`` (plan §8.2).",
         "operationId": "llm_health_v1_health_llm_get",
         "responses": {
           "200": {
@@ -2137,15 +2136,5 @@
         "title": "ValidationError"
       }
     }
-  },
-  "servers": [
-    {
-      "url": "http://127.0.0.1:8000",
-      "description": "Local uvicorn (default)"
-    },
-    {
-      "url": "/",
-      "description": "Relative (same host as UI serving this spec)"
-    }
-  ]
+  }
 }

@@ -55,7 +55,7 @@ class LLMServiceConfig:
     def default_tasks() -> dict[str, LLMTaskConfig]:
         """Built-in defaults when no YAML / env override applies.
 
-        ``provider`` is a logical label forwarded to the document-processing service;
+        ``provider`` is a logical label forwarded to **llm-service**;
         use ``llm_config.yaml`` (or env) to set groq, openai, anthropic, etc. per task.
         """
         return {
